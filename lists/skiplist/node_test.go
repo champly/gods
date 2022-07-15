@@ -2,41 +2,26 @@ package skiplist
 
 import "testing"
 
-func TestNodeRemove(t *testing.T) {
-	list := buildSortDubboLinkedList(1, 2, 3, 4)
-	currentNode, ok := list.Tail.FindNode(1)
-	if !ok {
-		t.Error("should found node")
-		return
-	}
-
-	// remove head
-	currentNode.Remove(list, 1)
-	list.Print()
-
-	// remove middle
-	currentNode, ok = list.Tail.FindNode(3)
-	if !ok {
-		t.Error("should found node")
-		return
-	}
-	currentNode.Remove(list, 3)
-	list.Print()
-
-	// remove tail
-	currentNode, ok = list.Tail.FindNode(4)
-	if !ok {
-		t.Error("should found node")
-		return
-	}
-	currentNode.Remove(list, 4)
-	list.Print()
+func TestNodeSet(t *testing.T) {
+	var node *Node
+	node.Set(nil, 1, 1)
+	node.setForward(nil, nil)
+	node.setLater(nil, nil)
 }
 
-func buildSortDubboLinkedList(dataList ...int) *SortDubboLinkedList {
-	list := &SortDubboLinkedList{}
-	for _, data := range dataList {
-		list.Set(int64(data), data)
-	}
-	return list
+func TestNodeFind(t *testing.T) {
+	var node *Node
+	node.FindNode(1)
+	node.findForward(1)
+	node.findLaster(1)
+}
+
+func TestNodeRemove(t *testing.T) {
+	var node *Node
+	node.Remove(nil, 1)
+	node.removeForward(nil, 1)
+	node.removeLaster(nil, 1)
+	node.removeCurrentNode(nil)
+
+	// list := buildSortDubboLinkedList(1, 2, 3, 4, 5, 6, 7)
 }

@@ -9,6 +9,10 @@ type Node struct {
 }
 
 func (node *Node) Set(sldList *SortDubboLinkedList, index int64, value interface{}) {
+	if sldList == nil {
+		return
+	}
+
 	newNode := &Node{Index: index, Value: value}
 	if node == nil {
 		// first node
@@ -31,6 +35,10 @@ func (node *Node) Set(sldList *SortDubboLinkedList, index int64, value interface
 }
 
 func (node *Node) setForward(sldList *SortDubboLinkedList, newNode *Node) {
+	if sldList == nil || newNode == nil {
+		return
+	}
+
 	for node != nil {
 		if node.Index == newNode.Index {
 			// udpate
@@ -87,6 +95,10 @@ func (node *Node) setForward(sldList *SortDubboLinkedList, newNode *Node) {
 }
 
 func (node *Node) setLater(sldList *SortDubboLinkedList, newNode *Node) {
+	if sldList == nil || newNode == nil {
+		return
+	}
+
 	for node != nil {
 		if node.Index == newNode.Index {
 			// udpate
@@ -234,6 +246,10 @@ func (node *Node) removeLaster(sdlList *SortDubboLinkedList, index int64) {
 }
 
 func (node *Node) removeCurrentNode(sdlList *SortDubboLinkedList) {
+	if sdlList == nil {
+		return
+	}
+
 	if node.Previous == nil {
 		// currentNode is Head
 		// Head -> nextNode
