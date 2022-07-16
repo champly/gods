@@ -27,34 +27,34 @@ func (node *Node) Set(sldList *SortDubboLinkedList, index int64, value interface
 		node.Value = value
 	case node.Index > index:
 		// <- forward set
-		node.setForward(sldList, newNode)
+		setForward(sldList, node.Previous, newNode)
 	default:
 		// -> later set
-		node.setLater(sldList, newNode)
+		setLater(sldList, node.Next, newNode)
 	}
 }
 
-func (node *Node) setForward(sldList *SortDubboLinkedList, newNode *Node) {
+func setForward(sldList *SortDubboLinkedList, currentNode, newNode *Node) {
 	if sldList == nil || newNode == nil {
 		return
 	}
 
-	for node != nil {
-		if node.Index == newNode.Index {
+	for currentNode != nil {
+		if currentNode.Index == newNode.Index {
 			// udpate
-			node.Value = newNode.Value
+			currentNode.Value = newNode.Value
 			return
 		}
 
 		// not match condition, find next
-		if node.Index > newNode.Index {
-			node = node.Previous
+		if currentNode.Index > newNode.Index {
+			currentNode = currentNode.Previous
 			continue
 		}
 
 		// currentNode.Index < newNode.Index
 		// should insert current previous
-		if node.Next == nil {
+		if currentNode.Next == nil {
 			// currentNode is Tail node, create chain
 			//   Tail -> newNode
 			// 1. Tail -> newNode
@@ -64,16 +64,16 @@ func (node *Node) setForward(sldList *SortDubboLinkedList, newNode *Node) {
 			// should insert between currentNode.Next and currentNode
 			//    newNode <-> currentNode.Next
 			// 1. newNode <- currentNode.Next
-			node.Next.Previous = newNode
+			currentNode.Next.Previous = newNode
 			// 2. newNode -> currentNode.Previous
-			newNode.Next = node.Next
+			newNode.Next = currentNode.Next
 		}
 
 		// currentNode <-> newNode
 		// 1. newNode -> currentNode
-		newNode.Previous = node
+		newNode.Previous = currentNode
 		// 2. newNode <- node
-		node.Next = newNode
+		currentNode.Next = newNode
 		return
 	}
 
@@ -94,27 +94,27 @@ func (node *Node) setForward(sldList *SortDubboLinkedList, newNode *Node) {
 	sldList.Head = newNode
 }
 
-func (node *Node) setLater(sldList *SortDubboLinkedList, newNode *Node) {
+func setLater(sldList *SortDubboLinkedList, currentNode, newNode *Node) {
 	if sldList == nil || newNode == nil {
 		return
 	}
 
-	for node != nil {
-		if node.Index == newNode.Index {
+	for currentNode != nil {
+		if currentNode.Index == newNode.Index {
 			// udpate
-			node.Value = newNode.Value
+			currentNode.Value = newNode.Value
 			return
 		}
 
 		// not match condition, find next
-		if node.Index < newNode.Index {
-			node = node.Next
+		if currentNode.Index < newNode.Index {
+			currentNode = currentNode.Next
 			continue
 		}
 
 		// currentNode.Index > newNode.Index
 		// should insert current previous
-		if node.Previous == nil {
+		if currentNode.Previous == nil {
 			// currentNode is Head node, create chain
 			//   Head -> newNode
 			// 1. Head -> newNode
@@ -124,16 +124,16 @@ func (node *Node) setLater(sldList *SortDubboLinkedList, newNode *Node) {
 			// should insert between currentNode.Previous and currentNode
 			//    currentNode.Previous <-> newNode
 			// 1. newNode <- currentNode.Previous
-			node.Previous.Next = newNode
+			currentNode.Previous.Next = newNode
 			// 2. newNode -> currentNode.Previous
-			newNode.Previous = node.Previous
+			newNode.Previous = currentNode.Previous
 		}
 
 		// newNode <-> currentNode
 		// 1. newNode -> currentNode
-		newNode.Next = node
+		newNode.Next = currentNode
 		// 2. newNode <- node
-		node.Previous = newNode
+		currentNode.Previous = newNode
 		return
 	}
 
@@ -163,34 +163,34 @@ func (node *Node) FindNode(index int64) (n *Node, exist bool) {
 	case node.Index == index:
 		return node, true
 	case node.Index > index:
-		return node.findForward(index)
+		return findForward(node.Previous, index)
 	default:
-		return node.findLaster(index)
+		return findLaster(node.Next, index)
 	}
 }
 
-func (node *Node) findForward(index int64) (n *Node, exist bool) {
-	for node != nil {
-		if node.Index == index {
-			return node, true
+func findForward(currentNode *Node, index int64) (n *Node, exist bool) {
+	for currentNode != nil {
+		if currentNode.Index == index {
+			return currentNode, true
 		}
-		if node.Index < index {
+		if currentNode.Index < index {
 			return nil, false
 		}
-		node = node.Previous
+		currentNode = currentNode.Previous
 	}
 	return nil, false
 }
 
-func (node *Node) findLaster(index int64) (n *Node, exist bool) {
-	for node != nil {
-		if node.Index == index {
-			return node, true
+func findLaster(currentNode *Node, index int64) (n *Node, exist bool) {
+	for currentNode != nil {
+		if currentNode.Index == index {
+			return currentNode, true
 		}
-		if node.Index > index {
+		if currentNode.Index > index {
 			return nil, false
 		}
-		node = node.Next
+		currentNode = currentNode.Next
 	}
 	return nil, false
 }
@@ -202,69 +202,187 @@ func (node *Node) Remove(sdlList *SortDubboLinkedList, index int64) {
 
 	switch {
 	case node.Index == index:
-		node.removeCurrentNode(sdlList)
+		removeCurrentNode(sdlList, node)
 	case node.Index > index:
-		node.removeForward(sdlList, index)
+		removeForward(sdlList, node.Previous, index)
 	default:
-		node.removeLaster(sdlList, index)
+		removeLaster(sdlList, node.Next, index)
 	}
 }
 
-func (node *Node) removeForward(sdlList *SortDubboLinkedList, index int64) {
-	for node != nil {
-		if node.Index > index {
-			node = node.Previous
+func removeForward(sdlList *SortDubboLinkedList, currentNode *Node, index int64) {
+	for currentNode != nil {
+		if currentNode.Index > index {
+			currentNode = currentNode.Previous
 			continue
 		}
 
-		if node.Index < index {
+		if currentNode.Index < index {
 			// not found return
 			return
 		}
 
-		// node.Index == index
-		node.removeCurrentNode(sdlList)
+		// currentNode.Index == index
+		removeCurrentNode(sdlList, currentNode)
 		return
 	}
 }
 
-func (node *Node) removeLaster(sdlList *SortDubboLinkedList, index int64) {
-	for node != nil {
-		if node.Index < index {
-			node = node.Next
+func removeLaster(sdlList *SortDubboLinkedList, currentNode *Node, index int64) {
+	for currentNode != nil {
+		if currentNode.Index < index {
+			currentNode = currentNode.Next
 			continue
 		}
-		if node.Index > index {
+		if currentNode.Index > index {
 			// not found return
 			return
 		}
 
-		// node.Index == index
-		node.removeCurrentNode(sdlList)
+		// currentNode.Index == index
+		removeCurrentNode(sdlList, currentNode)
 		return
 	}
 }
 
-func (node *Node) removeCurrentNode(sdlList *SortDubboLinkedList) {
+func removeCurrentNode(sdlList *SortDubboLinkedList, currentNode *Node) {
 	if sdlList == nil {
 		return
 	}
 
-	if node.Previous == nil {
+	if currentNode.Previous == nil {
 		// currentNode is Head
 		// Head -> nextNode
-		sdlList.Head = node.Next
+		sdlList.Head = currentNode.Next
 	} else {
 		// previousNode -> nextNode
-		node.Previous.Next = node.Next
+		currentNode.Previous.Next = currentNode.Next
 	}
 
-	if node.Next == nil {
+	if currentNode.Next == nil {
 		// currentNode is Tail
 		// Tail -> previousNode
-		sdlList.Tail = node.Previous
+		sdlList.Tail = currentNode.Previous
 	} else {
 		// previousNode <- nextNode
-		node.Next.Previous = node.Previous
+		currentNode.Next.Previous = currentNode.Previous
 	}
+}
+
+// FindLargestNodeNotLargerThanIndex find the largest node not larger than the index
+// eg: 1 2 3 4 5 6 9
+//    if index = 3, return node which index is 3
+//    if index = 7, return node which index is 6
+// eg: 2 (just one node)
+//    if index = 1, return nil
+func (node *Node) FindLargestNodeNotLargerThanIndex(index int64) *Node {
+	if node == nil {
+		return nil
+	}
+
+	switch {
+	case node.Index == index:
+		return node
+	case node.Index > index:
+		return findLargestNodeNotLargerThanIndexForward(node.Previous, index)
+	default:
+		if node.Next == nil {
+			// node is Tail
+			return node
+		}
+		return findLargestNodeNotLargerThanIndexLater(node.Next, index)
+	}
+}
+
+func findLargestNodeNotLargerThanIndexForward(currentNode *Node, index int64) *Node {
+	for currentNode != nil {
+		if currentNode.Index <= index {
+			return currentNode
+		}
+
+		currentNode = currentNode.Previous
+	}
+	return nil
+}
+
+func findLargestNodeNotLargerThanIndexLater(currentNode *Node, index int64) *Node {
+	for currentNode != nil {
+		if currentNode.Index == index {
+			return currentNode
+		}
+
+		if currentNode.Index > index {
+			if currentNode.Previous == nil {
+				// !import: just one node
+				return nil
+			}
+			return currentNode.Previous
+		}
+
+		if currentNode.Next == nil {
+			// node is Tail
+			return currentNode
+		}
+		currentNode = currentNode.Next
+	}
+	return nil
+}
+
+// FindSmallestNodeNotSmallerThanIndex find the smallest node not smaller than the index
+// eg: 1 2 3 4 5 6 9
+//    if index = 3, return node which index is 3
+//    if index = 7, return node which index is 9
+// eg: 2 (just one node)
+//    if index = 3, return nil
+func (node *Node) FindSmallestNodeNotSmallerThanIndex(index int64) *Node {
+	if node == nil {
+		return nil
+	}
+
+	switch {
+	case node.Index == index:
+		return node
+	case node.Index < index:
+		if node.Previous == nil {
+			// node is Tail
+			return node
+		}
+		return findSmallestNodeNotSmallerThanIndexForward(node.Previous, index)
+	default:
+		return findLargestNodeNotLargerThanIndexLater(node.Next, index)
+	}
+}
+
+func findSmallestNodeNotSmallerThanIndexForward(currentNode *Node, index int64) *Node {
+	for currentNode != nil {
+		if currentNode.Index == index {
+			return currentNode
+		}
+
+		if currentNode.Index < index {
+			if currentNode.Next == nil {
+				// !import: just one node
+				return nil
+			}
+			return currentNode.Next
+		}
+
+		if currentNode.Previous == nil {
+			// node is Head
+			return currentNode
+		}
+		currentNode = currentNode.Previous
+	}
+	return nil
+}
+
+func findSmallestNodeNotSmallerThanIndexLater(currentNode *Node, index int64) *Node {
+	for currentNode != nil {
+		if currentNode.Index >= index {
+			return currentNode
+		}
+
+		currentNode = currentNode.Next
+	}
+	return nil
 }

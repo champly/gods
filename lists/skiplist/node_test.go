@@ -5,23 +5,35 @@ import "testing"
 func TestNodeSet(t *testing.T) {
 	var node *Node
 	node.Set(nil, 1, 1)
-	node.setForward(nil, nil)
-	node.setLater(nil, nil)
+	setForward(nil, node, nil)
+	setLater(nil, node, nil)
 }
 
 func TestNodeFind(t *testing.T) {
 	var node *Node
 	node.FindNode(1)
-	node.findForward(1)
-	node.findLaster(1)
+	findForward(node, 1)
+	findLaster(node, 1)
 }
 
 func TestNodeRemove(t *testing.T) {
 	var node *Node
 	node.Remove(nil, 1)
-	node.removeForward(nil, 1)
-	node.removeLaster(nil, 1)
-	node.removeCurrentNode(nil)
+	removeForward(nil, node, 1)
+	removeLaster(nil, node, 1)
+	removeCurrentNode(nil, node)
+}
 
-	// list := buildSortDubboLinkedList(1, 2, 3, 4, 5, 6, 7)
+func TestNodeFindLargestNodeNotLargerThanIndex(t *testing.T) {
+	var node *Node
+	node.FindLargestNodeNotLargerThanIndex(1)
+	findLargestNodeNotLargerThanIndexForward(node, 1)
+	findLargestNodeNotLargerThanIndexLater(node, 1)
+}
+
+func TestNodeFindSmallestNodeNotSmallerThanIndexForward(t *testing.T) {
+	var node *Node
+	node.FindSmallestNodeNotSmallerThanIndex(1)
+	findSmallestNodeNotSmallerThanIndexForward(node, 1)
+	findSmallestNodeNotSmallerThanIndexLater(node, 1)
 }

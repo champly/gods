@@ -29,6 +29,10 @@ func (sdlList *SortDubboLinkedList) Remove(index int64) {
 	sdlList.Head.Remove(sdlList, index)
 }
 
-func (sdlList *SortDubboLinkedList) Query(index int64) (value interface{}, exist bool) {
-	panic("not implement")
+func (sdlList *SortDubboLinkedList) FindLargestNodeNotLargerThanIndex(index int64) *Node {
+	return sdlList.Head.FindLargestNodeNotLargerThanIndex(index)
+}
+
+func (sdlList *SortDubboLinkedList) FindSmallestNodeNotSmallerThanIndex(index int64) *Node {
+	return sdlList.Head.FindSmallestNodeNotSmallerThanIndex(index)
 }
