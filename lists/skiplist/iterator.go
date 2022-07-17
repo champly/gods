@@ -1,7 +1,7 @@
 package skiplist
 
 type Iterator struct {
-	SDLList    *SortDubboLinkedList
+	SDLList    *SortDoublyLinkedList
 	StartIndex int64
 	Desc       bool
 }

@@ -22,7 +22,7 @@ var (
 type SkipList struct {
 	Rand          *rand.Rand
 	MaxIndexLevel int
-	DataLevelList []*IndexList
+	DataLevelList []*SortDoublyLinkedList
 }
 
 // New build SkipList
@@ -33,27 +33,74 @@ func New(indexLevel int) *SkipList {
 	list := &SkipList{
 		Rand:          rand.New(rand.NewSource(int64(time.Now().Nanosecond()))),
 		MaxIndexLevel: indexLevel,
-		DataLevelList: make([]*IndexList, indexLevel),
+		DataLevelList: make([]*SortDoublyLinkedList, indexLevel+1),
 	}
 
 	for i := range list.DataLevelList {
-		list.DataLevelList[i] = &IndexList{
-			Level: i,
-		}
+		list.DataLevelList[i] = &SortDoublyLinkedList{}
 	}
 
 	return list
 }
+func (skipl *SkipList) Set(index int64, value interface{}) {
+	foundDataNode, ok := skipl.findNode(index)
+	if ok {
+		// update
+		foundDataNode.Value = value
+		return
+	}
+
+	// create new node
+	level := skipl.randomLevel()
+	if level == DataLevel0 {
+		// set to data
+		skipl.createNodeDirectly(index, value)
+		return
+	}
+
+	// build index
+	skipl.createNodeWithIndex(level, index, value)
+}
+
+// createNodeDirectly set Data without create index
+func (skipl *SkipList) createNodeDirectly(index int64, value interface{}) {
+	// indexList := skipl.getDataListWithLevel(DataLevel0)
+	// indexList.DataList.Set(index, value)
+	dataIndexNode := skipl.findDataIndexNode(index)
+	dataIndexNode.Set(skipl.getDataListWithLevel(DataLevel0), index, value)
+}
+
+func (skipl *SkipList) createNodeWithIndex(level int, index int64, value interface{}) {
+	// create current level index
+	dataIndexNode := skipl.findDataIndexNode(index)
+	newDataNode := dataIndexNode.Set(skipl.getDataListWithLevel(DataLevel0), index, value)
+
+	// create index node
+	tmpIndexNode := newDataNode
+	for l := 1; l <= level; l++ {
+		tmpIndexNode = skipl.createIndex(l, index, tmpIndexNode)
+	}
+}
+
+func (skipl *SkipList) createIndex(level int, index int64, reference *SortDoublyLinkedListNode) *SortDoublyLinkedListNode {
+	currentLevelIndexList := skipl.getDataListWithLevel(level)
+	return currentLevelIndexList.Set(index, &IndexData{Index: index, Reference: reference})
+}
 
 func (skipl *SkipList) FindValue(index int64) (value interface{}, exist bool) {
-	node, ok := skipl.FindNode(index)
+	node, ok := skipl.findNode(index)
 	if !ok {
 		return nil, false
 	}
 	return node.Value, true
 }
 
-func (skipl *SkipList) FindNode(index int64) (*Node, bool) {
+func (skipl *SkipList) findNode(index int64) (*SortDoublyLinkedListNode, bool) {
+	dataIndexNode := skipl.findDataIndexNode(index)
+	return dataIndexNode.FindNode(index)
+}
+
+func (skipl *SkipList) findDataIndexNode(index int64) *SortDoublyLinkedListNode {
 	// find node by index
 	for level := skipl.MaxIndexLevel; level > DataLevel0; level-- {
 		indexNode, ok := findIndexNode(skipl.getDataListWithLevel(level), index)
@@ -62,43 +109,17 @@ func (skipl *SkipList) FindNode(index int64) (*Node, bool) {
 			continue
 		}
 
-		foundNode, ok := findDataWithIndexData(indexNode, index)
-		if !ok {
-			return nil, false
+		dataIndexNode, ok := findDataIndexNodeWithIndexNode(indexNode, index)
+		if ok {
+			return dataIndexNode
 		}
-		if foundNode.Index == index {
-			return foundNode, true
-		}
-		foundNode, ok = foundNode.FindNode(index)
-		if !ok {
-			return nil, false
-		}
-		return foundNode, true
 	}
-	return nil, false
+
+	// not found, use Level0 to found
+	return skipl.getDataListWithLevel(DataLevel0).Head
 }
 
-func (skipl *SkipList) Set(index int64, value interface{}) {
-	foundNode, ok := skipl.FindNode(index)
-	if ok {
-		// update
-		foundNode.Value = value
-		return
-	}
-
-	// create new node
-	level := skipl.randomLevel()
-	if level == DataLevel0 {
-		// set to data
-		skipl.directSetData(index, value)
-		return
-	}
-
-	// build index
-	skipl.setWithIndex(level, index, value)
-}
-
-func (skipl *SkipList) getDataListWithLevel(level int) *IndexList {
+func (skipl *SkipList) getDataListWithLevel(level int) *SortDoublyLinkedList {
 	switch {
 	case level > skipl.MaxIndexLevel:
 		return skipl.DataLevelList[skipl.MaxIndexLevel]
@@ -107,15 +128,6 @@ func (skipl *SkipList) getDataListWithLevel(level int) *IndexList {
 	default:
 		return skipl.DataLevelList[level]
 	}
-}
-
-func (skipli *SkipList) directSetData(index int64, value interface{}) {
-	indexList := skipli.getDataListWithLevel(DataLevel0)
-	indexList.DataList.Set(index, value)
-}
-
-func (skipl *SkipList) setWithIndex(level int, index int64, value interface{}) {
-	// create current level index
 }
 
 func (skipl *SkipList) randomLevel() int {

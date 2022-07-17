@@ -1,19 +1,19 @@
 package skiplist
 
-type Node struct {
+type SortDoublyLinkedListNode struct {
 	Index int64
 	Value interface{}
 
-	Previous *Node
-	Next     *Node
+	Previous *SortDoublyLinkedListNode
+	Next     *SortDoublyLinkedListNode
 }
 
-func (node *Node) Set(sldList *SortDubboLinkedList, index int64, value interface{}) {
+func (node *SortDoublyLinkedListNode) Set(sldList *SortDoublyLinkedList, index int64, value interface{}) (newNode *SortDoublyLinkedListNode) {
 	if sldList == nil {
 		return
 	}
 
-	newNode := &Node{Index: index, Value: value}
+	newNode = &SortDoublyLinkedListNode{Index: index, Value: value}
 	if node == nil {
 		// first node
 		sldList.Head = newNode
@@ -32,9 +32,10 @@ func (node *Node) Set(sldList *SortDubboLinkedList, index int64, value interface
 		// -> later set
 		setLater(sldList, node.Next, newNode)
 	}
+	return
 }
 
-func setForward(sldList *SortDubboLinkedList, currentNode, newNode *Node) {
+func setForward(sldList *SortDoublyLinkedList, currentNode, newNode *SortDoublyLinkedListNode) {
 	if sldList == nil || newNode == nil {
 		return
 	}
@@ -94,7 +95,7 @@ func setForward(sldList *SortDubboLinkedList, currentNode, newNode *Node) {
 	sldList.Head = newNode
 }
 
-func setLater(sldList *SortDubboLinkedList, currentNode, newNode *Node) {
+func setLater(sldList *SortDoublyLinkedList, currentNode, newNode *SortDoublyLinkedListNode) {
 	if sldList == nil || newNode == nil {
 		return
 	}
@@ -154,7 +155,7 @@ func setLater(sldList *SortDubboLinkedList, currentNode, newNode *Node) {
 	sldList.Tail = newNode
 }
 
-func (node *Node) FindNode(index int64) (n *Node, exist bool) {
+func (node *SortDoublyLinkedListNode) FindNode(index int64) (n *SortDoublyLinkedListNode, exist bool) {
 	if node == nil {
 		return nil, false
 	}
@@ -169,7 +170,7 @@ func (node *Node) FindNode(index int64) (n *Node, exist bool) {
 	}
 }
 
-func findForward(currentNode *Node, index int64) (n *Node, exist bool) {
+func findForward(currentNode *SortDoublyLinkedListNode, index int64) (n *SortDoublyLinkedListNode, exist bool) {
 	for currentNode != nil {
 		if currentNode.Index == index {
 			return currentNode, true
@@ -182,7 +183,7 @@ func findForward(currentNode *Node, index int64) (n *Node, exist bool) {
 	return nil, false
 }
 
-func findLaster(currentNode *Node, index int64) (n *Node, exist bool) {
+func findLaster(currentNode *SortDoublyLinkedListNode, index int64) (n *SortDoublyLinkedListNode, exist bool) {
 	for currentNode != nil {
 		if currentNode.Index == index {
 			return currentNode, true
@@ -195,7 +196,7 @@ func findLaster(currentNode *Node, index int64) (n *Node, exist bool) {
 	return nil, false
 }
 
-func (node *Node) Remove(sdlList *SortDubboLinkedList, index int64) {
+func (node *SortDoublyLinkedListNode) Remove(sdlList *SortDoublyLinkedList, index int64) {
 	if node == nil {
 		return
 	}
@@ -210,7 +211,7 @@ func (node *Node) Remove(sdlList *SortDubboLinkedList, index int64) {
 	}
 }
 
-func removeForward(sdlList *SortDubboLinkedList, currentNode *Node, index int64) {
+func removeForward(sdlList *SortDoublyLinkedList, currentNode *SortDoublyLinkedListNode, index int64) {
 	for currentNode != nil {
 		if currentNode.Index > index {
 			currentNode = currentNode.Previous
@@ -228,7 +229,7 @@ func removeForward(sdlList *SortDubboLinkedList, currentNode *Node, index int64)
 	}
 }
 
-func removeLaster(sdlList *SortDubboLinkedList, currentNode *Node, index int64) {
+func removeLaster(sdlList *SortDoublyLinkedList, currentNode *SortDoublyLinkedListNode, index int64) {
 	for currentNode != nil {
 		if currentNode.Index < index {
 			currentNode = currentNode.Next
@@ -245,7 +246,7 @@ func removeLaster(sdlList *SortDubboLinkedList, currentNode *Node, index int64) 
 	}
 }
 
-func removeCurrentNode(sdlList *SortDubboLinkedList, currentNode *Node) {
+func removeCurrentNode(sdlList *SortDoublyLinkedList, currentNode *SortDoublyLinkedListNode) {
 	if sdlList == nil {
 		return
 	}
@@ -275,7 +276,7 @@ func removeCurrentNode(sdlList *SortDubboLinkedList, currentNode *Node) {
 //    if index = 7, return node which index is 6
 // eg: 2 (just one node)
 //    if index = 1, return nil
-func (node *Node) FindLargestNodeNotLargerThanIndex(index int64) *Node {
+func (node *SortDoublyLinkedListNode) FindLargestNodeNotLargerThanIndex(index int64) *SortDoublyLinkedListNode {
 	if node == nil {
 		return nil
 	}
@@ -294,7 +295,7 @@ func (node *Node) FindLargestNodeNotLargerThanIndex(index int64) *Node {
 	}
 }
 
-func findLargestNodeNotLargerThanIndexForward(currentNode *Node, index int64) *Node {
+func findLargestNodeNotLargerThanIndexForward(currentNode *SortDoublyLinkedListNode, index int64) *SortDoublyLinkedListNode {
 	for currentNode != nil {
 		if currentNode.Index <= index {
 			return currentNode
@@ -305,7 +306,7 @@ func findLargestNodeNotLargerThanIndexForward(currentNode *Node, index int64) *N
 	return nil
 }
 
-func findLargestNodeNotLargerThanIndexLater(currentNode *Node, index int64) *Node {
+func findLargestNodeNotLargerThanIndexLater(currentNode *SortDoublyLinkedListNode, index int64) *SortDoublyLinkedListNode {
 	for currentNode != nil {
 		if currentNode.Index == index {
 			return currentNode
@@ -334,7 +335,7 @@ func findLargestNodeNotLargerThanIndexLater(currentNode *Node, index int64) *Nod
 //    if index = 7, return node which index is 9
 // eg: 2 (just one node)
 //    if index = 3, return nil
-func (node *Node) FindSmallestNodeNotSmallerThanIndex(index int64) *Node {
+func (node *SortDoublyLinkedListNode) FindSmallestNodeNotSmallerThanIndex(index int64) *SortDoublyLinkedListNode {
 	if node == nil {
 		return nil
 	}
@@ -353,7 +354,7 @@ func (node *Node) FindSmallestNodeNotSmallerThanIndex(index int64) *Node {
 	}
 }
 
-func findSmallestNodeNotSmallerThanIndexForward(currentNode *Node, index int64) *Node {
+func findSmallestNodeNotSmallerThanIndexForward(currentNode *SortDoublyLinkedListNode, index int64) *SortDoublyLinkedListNode {
 	for currentNode != nil {
 		if currentNode.Index == index {
 			return currentNode
@@ -376,7 +377,7 @@ func findSmallestNodeNotSmallerThanIndexForward(currentNode *Node, index int64) 
 	return nil
 }
 
-func findSmallestNodeNotSmallerThanIndexLater(currentNode *Node, index int64) *Node {
+func findSmallestNodeNotSmallerThanIndexLater(currentNode *SortDoublyLinkedListNode, index int64) *SortDoublyLinkedListNode {
 	for currentNode != nil {
 		if currentNode.Index >= index {
 			return currentNode

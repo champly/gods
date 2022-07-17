@@ -10,13 +10,13 @@ var (
 	r = rand.New(rand.NewSource(int64(time.Now().Nanosecond())))
 )
 
-func TestSortDubboLinkedListSetAndSet(t *testing.T) {
-	list := &SortDubboLinkedList{}
+func TestSortDubboLinkedListSet(t *testing.T) {
+	list := &SortDoublyLinkedList{}
 
 	count := 10000
 	currentData := map[int]int{}
 
-	var node *Node
+	var node *SortDoublyLinkedListNode
 	var findNode bool
 
 	for i := count; i >= 0; i-- {
@@ -54,7 +54,7 @@ func TestSortDubboLinkedListSetAndSet(t *testing.T) {
 }
 
 func BenchmarkSortDubboLinkedListSet(b *testing.B) {
-	list := &SortDubboLinkedList{}
+	list := &SortDoublyLinkedList{}
 	count := b.N
 
 	b.ResetTimer()
@@ -260,8 +260,8 @@ func TestFindSmallestNodeNotSmallerThanIndexForward(t *testing.T) {
 	}
 }
 
-func buildSortDubboLinkedList(dataList ...int) *SortDubboLinkedList {
-	list := &SortDubboLinkedList{}
+func buildSortDubboLinkedList(dataList ...int) *SortDoublyLinkedList {
+	list := &SortDoublyLinkedList{}
 	for _, data := range dataList {
 		list.Set(int64(data), data)
 	}
