@@ -19,6 +19,24 @@ var (
 	RandThreshold    = int(SkipListPoint * float64(MaxRandThreshold))
 )
 
+type ISkipList interface {
+	// Set create or update value
+	Set(index int64, value interface{})
+
+	// Query query value
+	Query(index int64) (value interface{}, exist bool)
+
+	// FindLargestNodeNotLargerThanIndex
+	FindLargestNodeNotLargerThanIndex(index int64) IIterator
+
+	// FindSmallestNodeNotSmallerThanIndex
+	FindSmallestNodeNotSmallerThanIndex(index int64) IIterator
+}
+
+func NewSkipList(indexLevel int) ISkipList {
+	return newSkipList(indexLevel)
+}
+
 type SkipList struct {
 	Rand          *rand.Rand
 	MaxIndexLevel int
@@ -26,7 +44,8 @@ type SkipList struct {
 }
 
 // New build SkipList
-func New(indexLevel int) *SkipList {
+
+func newSkipList(indexLevel int) *SkipList {
 	if indexLevel > IndexLevelMax || indexLevel < IndexLevel1 {
 		log.Fatalf("Max support %d index level, or less than %d", indexLevel, IndexLevel1)
 	}
@@ -87,7 +106,7 @@ func (skipl *SkipList) createIndex(level int, index int64, reference *SortDoubly
 	return currentLevelIndexList.Set(index, &IndexData{Index: index, Reference: reference})
 }
 
-func (skipl *SkipList) FindValue(index int64) (value interface{}, exist bool) {
+func (skipl *SkipList) Query(index int64) (value interface{}, exist bool) {
 	node, ok := skipl.findNode(index)
 	if !ok {
 		return nil, false
@@ -119,14 +138,16 @@ func (skipl *SkipList) findDataIndexNode(index int64) *SortDoublyLinkedListNode 
 	return skipl.getDataListWithLevel(DataLevel0).Head
 }
 
-func (skipl *SkipList) FindLargestNodeNotLargerThanIndex(index int64) *SortDoublyLinkedListNode {
+func (skipl *SkipList) FindLargestNodeNotLargerThanIndex(index int64) IIterator {
 	dataIndexNode := skipl.findDataIndexNode(index)
-	return dataIndexNode.FindLargestNodeNotLargerThanIndex(index)
+	currentNode := dataIndexNode.FindLargestNodeNotLargerThanIndex(index)
+	return &Iterator{currentNode: currentNode}
 }
 
-func (skipl *SkipList) FindSmallestNodeNotSmallerThanIndex(index int64) *SortDoublyLinkedListNode {
+func (skipl *SkipList) FindSmallestNodeNotSmallerThanIndex(index int64) IIterator {
 	dataIndexNode := skipl.findDataIndexNode(index)
-	return dataIndexNode.FindSmallestNodeNotSmallerThanIndex(index)
+	currentNode := dataIndexNode.FindSmallestNodeNotSmallerThanIndex(index)
+	return &Iterator{currentNode: currentNode}
 }
 
 func (skipl *SkipList) getDataListWithLevel(level int) *SortDoublyLinkedList {
