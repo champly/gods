@@ -7,12 +7,9 @@ import (
 )
 
 const (
-	Level0 = iota
-	Level1
-	Level2
-	Level3
-	Level4
-	LevelLast
+	Level0    = 0
+	Level1    = 1
+	LevelLast = 5
 )
 
 var (
@@ -23,11 +20,11 @@ var (
 )
 
 // New build SkipList
-func New(indexLevel int) *List {
+func New(indexLevel int) *SkipList {
 	if indexLevel > LevelLast || indexLevel < Level1 {
 		log.Fatalf("Max support %d index level, or less than %d", indexLevel, Level1)
 	}
-	list := &List{
+	list := &SkipList{
 		Rand:      rand.New(rand.NewSource(int64(time.Now().Nanosecond()))),
 		MaxLevel:  indexLevel,
 		LevelList: make([]*IndexList, indexLevel),
@@ -42,7 +39,7 @@ func New(indexLevel int) *List {
 	return list
 }
 
-type List struct {
+type SkipList struct {
 	Rand      *rand.Rand
 	MaxLevel  int
 	LevelList []*IndexList
@@ -57,7 +54,7 @@ type IndexData struct {
 	Reference *Node
 }
 
-func (list *List) Query(index int64) (value interface{}, exist bool) {
+func (list *SkipList) Query(index int64) (value interface{}, exist bool) {
 	// var startNode *Node
 	for i := list.MaxLevel; i > Level1; i-- {
 		if list.LevelList[i].DataList == nil {
@@ -71,7 +68,7 @@ func (list *List) Query(index int64) (value interface{}, exist bool) {
 	panic("not implement")
 }
 
-func (list *List) Set(index int64, value interface{}) {
+func (list *SkipList) Set(index int64, value interface{}) {
 	level := list.randomLevel()
 	if level == Level0 {
 		// set to data
@@ -83,14 +80,14 @@ func (list *List) Set(index int64, value interface{}) {
 	list.setWithIndex(level, index, value)
 }
 
-func (list *List) directSetData(index int64, value interface{}) {
+func (list *SkipList) directSetData(index int64, value interface{}) {
 }
 
-func (list *List) setWithIndex(level int, index int64, value interface{}) {
+func (list *SkipList) setWithIndex(level int, index int64, value interface{}) {
 	// create current level index
 }
 
-func (list *List) randomLevel() int {
+func (list *SkipList) randomLevel() int {
 	var level int
 	for list.Rand.Intn(MaxRandThreshold) < RandThreshold {
 		level++

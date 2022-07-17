@@ -342,14 +342,14 @@ func (node *Node) FindSmallestNodeNotSmallerThanIndex(index int64) *Node {
 	switch {
 	case node.Index == index:
 		return node
-	case node.Index < index:
+	case node.Index > index:
 		if node.Previous == nil {
 			// node is Tail
 			return node
 		}
 		return findSmallestNodeNotSmallerThanIndexForward(node.Previous, index)
 	default:
-		return findLargestNodeNotLargerThanIndexLater(node.Next, index)
+		return findSmallestNodeNotSmallerThanIndexLater(node.Next, index)
 	}
 }
 

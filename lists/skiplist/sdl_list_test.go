@@ -163,7 +163,7 @@ func TestFindLargestNodeNotLargerThanIndex(t *testing.T) {
 
 	list3 := buildSortDubboLinkedList(2, 3, 4, 5)
 	node, ok = list3.FindNode(3)
-	if ok {
+	if !ok {
 		t.Error("should found node")
 		return
 	}
@@ -184,6 +184,7 @@ func TestFindSmallestNodeNotSmallerThanIndexForward(t *testing.T) {
 		t.Error("should found node")
 		return
 	}
+	list.Print()
 	if node.Index != 3 {
 		t.Errorf("found node index should %d but got %d", 3, node.Index)
 		return
@@ -245,7 +246,7 @@ func TestFindSmallestNodeNotSmallerThanIndexForward(t *testing.T) {
 
 	list3 := buildSortDubboLinkedList(2, 3, 4, 5)
 	node, ok = list3.FindNode(3)
-	if ok {
+	if !ok {
 		t.Error("should found node")
 		return
 	}
