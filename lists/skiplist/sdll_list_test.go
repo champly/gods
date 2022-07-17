@@ -59,7 +59,7 @@ func BenchmarkSortDubboLinkedListSet(b *testing.B) {
 
 	b.ResetTimer()
 	for i := count; i > 0; i-- {
-		list.Set(int64(random(100)), i)
+		list.Set(int64(random(1_0000)), i)
 	}
 	b.Log("count", count)
 }
@@ -267,6 +267,7 @@ func buildSortDubboLinkedList(dataList ...int) *SortDoublyLinkedList {
 	}
 	return list
 }
+
 func random(max int) int {
 	return r.Intn(max)
 }

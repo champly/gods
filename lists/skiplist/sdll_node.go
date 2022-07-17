@@ -211,6 +211,22 @@ func (node *SortDoublyLinkedListNode) Remove(sdlList *SortDoublyLinkedList, inde
 	}
 }
 
+func (node *SortDoublyLinkedListNode) RemoveCurrentForward(sdlList *SortDoublyLinkedList) {
+	if node == nil {
+		return
+	}
+	sdlList.Head = node
+	node.Previous = nil
+}
+
+func (node *SortDoublyLinkedListNode) RemoveCurrentLater(sdlList *SortDoublyLinkedList) {
+	if node == nil {
+		return
+	}
+	sdlList.Tail = node
+	node.Next = nil
+}
+
 func removeForward(sdlList *SortDoublyLinkedList, currentNode *SortDoublyLinkedListNode, index int64) {
 	for currentNode != nil {
 		if currentNode.Index > index {

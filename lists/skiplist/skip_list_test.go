@@ -51,7 +51,89 @@ func BenchmarkSkipList(b *testing.B) {
 
 	b.ResetTimer()
 	for i := count; i > 0; i-- {
-		list.Set(int64(random(100)), i)
+		list.Set(int64(random(1_0000)), i)
 	}
 	b.Log("count", count)
+}
+
+func TestSkipListFindLargestNodeNotLargerThanIndex(t *testing.T) {
+	list := buildSkipList(1, 2, 3, 4, 5, 6, 9)
+	node := list.FindLargestNodeNotLargerThanIndex(3)
+	if node == nil {
+		t.Error("should found node")
+		return
+	}
+	if node.Index != 3 {
+		t.Errorf("found node index should %d but got %d", 3, node.Index)
+		return
+	}
+
+	node = list.FindLargestNodeNotLargerThanIndex(7)
+	if node == nil {
+		t.Error("should found node")
+		return
+	}
+	if node.Index != 6 {
+		t.Errorf("found node index should %d but got %d", 6, node.Index)
+		return
+	}
+
+	list2 := buildSkipList(2)
+	if list2.FindLargestNodeNotLargerThanIndex(1) != nil {
+		t.Error("should not found node")
+		return
+	}
+	node = list2.FindLargestNodeNotLargerThanIndex(3)
+	if node == nil {
+		t.Error("should found node")
+		return
+	}
+	if node.Index != 2 {
+		t.Errorf("found node index should %d but got %d", 2, node.Index)
+	}
+}
+
+func TestSkipListFindSmallestNodeNotSmallerThanIndexForward(t *testing.T) {
+	list := buildSkipList(1, 2, 3, 4, 5, 6, 9)
+	node := list.FindSmallestNodeNotSmallerThanIndex(3)
+	if node == nil {
+		t.Error("should found node")
+		return
+	}
+	if node.Index != 3 {
+		t.Errorf("found node index should %d but got %d", 3, node.Index)
+		return
+	}
+
+	node = list.FindSmallestNodeNotSmallerThanIndex(7)
+	if node == nil {
+		t.Error("should found node")
+		return
+	}
+	if node.Index != 9 {
+		t.Errorf("found node index should %d but got %d", 9, node.Index)
+		return
+	}
+
+	list2 := buildSkipList(2)
+	if list2.FindSmallestNodeNotSmallerThanIndex(3) != nil {
+		t.Error("should not found node")
+		return
+	}
+	node = list2.FindSmallestNodeNotSmallerThanIndex(1)
+	if node == nil {
+		t.Error("should found node")
+		return
+	}
+	if node.Index != 2 {
+		t.Errorf("found node index should %d but got %d", 2, node.Index)
+	}
+}
+
+func buildSkipList(dataList ...int) *SkipList {
+	list := New(IndexLevelMax)
+	for _, data := range dataList {
+		list.Set(int64(data), data)
+	}
+	return list
 }

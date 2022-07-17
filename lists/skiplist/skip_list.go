@@ -119,6 +119,16 @@ func (skipl *SkipList) findDataIndexNode(index int64) *SortDoublyLinkedListNode 
 	return skipl.getDataListWithLevel(DataLevel0).Head
 }
 
+func (skipl *SkipList) FindLargestNodeNotLargerThanIndex(index int64) *SortDoublyLinkedListNode {
+	dataIndexNode := skipl.findDataIndexNode(index)
+	return dataIndexNode.FindLargestNodeNotLargerThanIndex(index)
+}
+
+func (skipl *SkipList) FindSmallestNodeNotSmallerThanIndex(index int64) *SortDoublyLinkedListNode {
+	dataIndexNode := skipl.findDataIndexNode(index)
+	return dataIndexNode.FindSmallestNodeNotSmallerThanIndex(index)
+}
+
 func (skipl *SkipList) getDataListWithLevel(level int) *SortDoublyLinkedList {
 	switch {
 	case level > skipl.MaxIndexLevel:
