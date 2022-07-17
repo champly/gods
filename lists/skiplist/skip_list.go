@@ -7,9 +7,9 @@ import (
 )
 
 const (
-	Level0    = 0
-	Level1    = 1
-	LevelLast = 5
+	DataLevel0    = 0
+	IndexLevel1   = 1
+	IndexLevelMax = 5
 )
 
 var (
@@ -19,19 +19,25 @@ var (
 	RandThreshold    = int(SkipListPoint * float64(MaxRandThreshold))
 )
 
+type SkipList struct {
+	Rand          *rand.Rand
+	MaxIndexLevel int
+	DataLevelList []*IndexList
+}
+
 // New build SkipList
 func New(indexLevel int) *SkipList {
-	if indexLevel > LevelLast || indexLevel < Level1 {
-		log.Fatalf("Max support %d index level, or less than %d", indexLevel, Level1)
+	if indexLevel > IndexLevelMax || indexLevel < IndexLevel1 {
+		log.Fatalf("Max support %d index level, or less than %d", indexLevel, IndexLevel1)
 	}
 	list := &SkipList{
-		Rand:      rand.New(rand.NewSource(int64(time.Now().Nanosecond()))),
-		MaxLevel:  indexLevel,
-		LevelList: make([]*IndexList, indexLevel),
+		Rand:          rand.New(rand.NewSource(int64(time.Now().Nanosecond()))),
+		MaxIndexLevel: indexLevel,
+		DataLevelList: make([]*IndexList, indexLevel),
 	}
 
-	for i := range list.LevelList {
-		list.LevelList[i] = &IndexList{
+	for i := range list.DataLevelList {
+		list.DataLevelList[i] = &IndexList{
 			Level: i,
 		}
 	}
@@ -39,62 +45,87 @@ func New(indexLevel int) *SkipList {
 	return list
 }
 
-type SkipList struct {
-	Rand      *rand.Rand
-	MaxLevel  int
-	LevelList []*IndexList
+func (skipl *SkipList) FindValue(index int64) (value interface{}, exist bool) {
+	node, ok := skipl.FindNode(index)
+	if !ok {
+		return nil, false
+	}
+	return node.Value, true
 }
 
-type IndexList struct {
-	DataList *SortDubboLinkedList
-	Level    int
-}
-
-type IndexData struct {
-	Reference *Node
-}
-
-func (list *SkipList) Query(index int64) (value interface{}, exist bool) {
-	// var startNode *Node
-	for i := list.MaxLevel; i > Level1; i-- {
-		if list.LevelList[i].DataList == nil {
-			list.LevelList[i].DataList = &SortDubboLinkedList{}
+func (skipl *SkipList) FindNode(index int64) (*Node, bool) {
+	// find node by index
+	for level := skipl.MaxIndexLevel; level > DataLevel0; level-- {
+		indexNode, ok := findIndexNode(skipl.getDataListWithLevel(level), index)
+		if !ok {
+			// not found index node, find next index
+			continue
 		}
-		currentIndexList := list.LevelList[i]
 
-		currentIndexList.DataList.Head.FindNode(index)
+		foundNode, ok := findDataWithIndexData(indexNode, index)
+		if !ok {
+			return nil, false
+		}
+		if foundNode.Index == index {
+			return foundNode, true
+		}
+		foundNode, ok = foundNode.FindNode(index)
+		if !ok {
+			return nil, false
+		}
+		return foundNode, true
+	}
+	return nil, false
+}
+
+func (skipl *SkipList) Set(index int64, value interface{}) {
+	foundNode, ok := skipl.FindNode(index)
+	if ok {
+		// update
+		foundNode.Value = value
+		return
 	}
 
-	panic("not implement")
-}
-
-func (list *SkipList) Set(index int64, value interface{}) {
-	level := list.randomLevel()
-	if level == Level0 {
+	// create new node
+	level := skipl.randomLevel()
+	if level == DataLevel0 {
 		// set to data
-		list.directSetData(index, value)
+		skipl.directSetData(index, value)
 		return
 	}
 
 	// build index
-	list.setWithIndex(level, index, value)
+	skipl.setWithIndex(level, index, value)
 }
 
-func (list *SkipList) directSetData(index int64, value interface{}) {
+func (skipl *SkipList) getDataListWithLevel(level int) *IndexList {
+	switch {
+	case level > skipl.MaxIndexLevel:
+		return skipl.DataLevelList[skipl.MaxIndexLevel]
+	// case level > DataLevel:
+	//     return list.LevelList[Level0]
+	default:
+		return skipl.DataLevelList[level]
+	}
 }
 
-func (list *SkipList) setWithIndex(level int, index int64, value interface{}) {
+func (skipli *SkipList) directSetData(index int64, value interface{}) {
+	indexList := skipli.getDataListWithLevel(DataLevel0)
+	indexList.DataList.Set(index, value)
+}
+
+func (skipl *SkipList) setWithIndex(level int, index int64, value interface{}) {
 	// create current level index
 }
 
-func (list *SkipList) randomLevel() int {
+func (skipl *SkipList) randomLevel() int {
 	var level int
-	for list.Rand.Intn(MaxRandThreshold) < RandThreshold {
+	for skipl.Rand.Intn(MaxRandThreshold) < RandThreshold {
 		level++
 	}
 
-	if level > list.MaxLevel {
-		return list.MaxLevel
+	if level > skipl.MaxIndexLevel {
+		return skipl.MaxIndexLevel
 	}
 	return level
 }
