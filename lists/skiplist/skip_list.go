@@ -83,8 +83,6 @@ func (skipl *SkipList) Set(index int64, value interface{}) {
 
 // createNodeDirectly set Data without create index
 func (skipl *SkipList) createNodeDirectly(index int64, value interface{}) {
-	// indexList := skipl.getDataListWithLevel(DataLevel0)
-	// indexList.DataList.Set(index, value)
 	dataIndexNode := skipl.findDataIndexNode(index)
 	dataIndexNode.Set(skipl.getDataListWithLevel(DataLevel0), index, value)
 }
@@ -154,8 +152,8 @@ func (skipl *SkipList) getDataListWithLevel(level int) *SortDoublyLinkedList {
 	switch {
 	case level > skipl.MaxIndexLevel:
 		return skipl.DataLevelList[skipl.MaxIndexLevel]
-	// case level > DataLevel:
-	//     return list.LevelList[Level0]
+	case level < DataLevel0:
+		return skipl.DataLevelList[DataLevel0]
 	default:
 		return skipl.DataLevelList[level]
 	}

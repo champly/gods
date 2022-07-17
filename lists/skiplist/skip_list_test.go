@@ -79,7 +79,8 @@ func TestSkipListFindLargestNodeNotLargerThanIndex(t *testing.T) {
 	}
 
 	list2 := buildSkipList(2)
-	if list2.FindLargestNodeNotLargerThanIndex(1) != nil {
+	_, _, ok = list2.FindLargestNodeNotLargerThanIndex(1).GetValue()
+	if ok {
 		t.Error("should not found node")
 		return
 	}
@@ -116,7 +117,8 @@ func TestSkipListFindSmallestNodeNotSmallerThanIndexForward(t *testing.T) {
 	}
 
 	list2 := buildSkipList(2)
-	if list2.FindSmallestNodeNotSmallerThanIndex(3) != nil {
+	_, _, ok = list2.FindSmallestNodeNotSmallerThanIndex(3).GetValue()
+	if ok {
 		t.Error("should not found node")
 		return
 	}
