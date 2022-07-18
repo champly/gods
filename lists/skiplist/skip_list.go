@@ -33,6 +33,7 @@ type ISkipList interface {
 	FindSmallestNodeNotSmallerThanIndex(index int64) IIterator
 }
 
+// NewSkipList build SkipList
 func NewSkipList(indexLevel int) ISkipList {
 	return newSkipList(indexLevel)
 }
@@ -42,8 +43,6 @@ type SkipList struct {
 	MaxIndexLevel int
 	DataLevelList []*SortDoublyLinkedList
 }
-
-// New build SkipList
 
 func newSkipList(indexLevel int) *SkipList {
 	if indexLevel > IndexLevelMax || indexLevel < IndexLevel1 {
@@ -61,6 +60,7 @@ func newSkipList(indexLevel int) *SkipList {
 
 	return list
 }
+
 func (skipl *SkipList) Set(index int64, value interface{}) {
 	foundDataNode, ok := skipl.findNode(index)
 	if ok {
