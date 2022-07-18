@@ -18,22 +18,6 @@ type TransactionIDInfo struct {
 	Expired  bool
 }
 
-func (t *TransactionIDInfo) CanRead(txid int64) bool {
-	if t.ID < txid {
-		return false
-	}
-	if t.ID == txid {
-		return true
-	}
-
-	for _, processTxID := range t.SnapShot {
-		if txid == processTxID {
-			return false
-		}
-	}
-	return true
-}
-
 func GetTxID() int64 {
 	for {
 		oldid := atomic.LoadInt64(&lastIndexID)
@@ -49,7 +33,20 @@ func PutTxID(txid int64) {
 	removeTxIDFromCache(txid)
 }
 
-func GetTxInfo(txid int64) (*TransactionIDInfo, bool) {
+func currentTxIDCanReadTxID(currentTxID, txID int64) bool {
+	txidInfo, ok := getTxInfo(currentTxID)
+	if !ok {
+		return false
+	}
+	for _, snapshotTxID := range txidInfo.SnapShot {
+		if snapshotTxID == currentTxID {
+			return false
+		}
+	}
+	return true
+}
+
+func getTxInfo(txid int64) (*TransactionIDInfo, bool) {
 	txIDLock.Lock()
 	defer txIDLock.Unlock()
 

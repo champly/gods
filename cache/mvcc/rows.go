@@ -1,10 +1,14 @@
 package mvcc
 
-import "sync/atomic"
+import (
+	"github.com/champly/gods/lists/skiplist"
+)
+
+var skiplistIndexLevel = 2
 
 type Row struct {
-	MultiVersionValue []SingleVersionData
-	LastTransactionID int64
+	Name              string
+	MultiVersionValue skiplist.ISkipList
 }
 
 type SingleVersionData struct {
@@ -13,34 +17,21 @@ type SingleVersionData struct {
 	IsDelete      bool
 }
 
-func (r *Row) Read(txid int64) (value interface{}, ok bool) {
-	// if r.LastTransactionID <= txid {
-	//     for _, sd := range r.MultiVersionValue {
-	//         if sd.TransactionID == r.LastTransactionID {
-	//             if !sd.IsDelete {
-	//                 return nil, false
-	//             }
-	//         }
-	//     }
-	// }
-
-	// filter txid with currentSnapshot
-	return nil, false
+func NewRows(name string) *Row {
+	return &Row{
+		Name:              name,
+		MultiVersionValue: skiplist.NewSkipList(skiplistIndexLevel),
+	}
 }
 
-func (r *Row) Put(txid int64, value interface{}) bool {
-	r.MultiVersionValue = append(r.MultiVersionValue, SingleVersionData{
+func (r *Row) putValue(txid int64, value interface{}) {
+	r.MultiVersionValue.Set(txid, &SingleVersionData{
 		Value:         value,
 		TransactionID: txid,
+		IsDelete:      false,
 	})
+}
 
-	if atomic.LoadInt64(&r.LastTransactionID) >= txid {
-		return true
-	}
-
-	for {
-		if atomic.CompareAndSwapInt64(&r.LastTransactionID, r.LastTransactionID, txid) {
-			return true
-		}
-	}
+func (r *Row) findLargestNodeNotLargerThanTxID(txid int64) skiplist.IIterator {
+	return r.MultiVersionValue.FindLargestNodeNotLargerThanIndex(txid)
 }
