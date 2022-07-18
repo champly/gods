@@ -35,3 +35,10 @@ func (r *Row) putValue(txid int64, value interface{}) {
 func (r *Row) findLargestNodeNotLargerThanTxID(txid int64) skiplist.IIterator {
 	return r.MultiVersionValue.FindLargestNodeNotLargerThanIndex(txid)
 }
+
+func (r *Row) remove(txid int64) {
+	r.MultiVersionValue.Set(txid, &SingleVersionData{
+		TransactionID: txid,
+		IsDelete:      true,
+	})
+}

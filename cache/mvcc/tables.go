@@ -40,6 +40,21 @@ func (tbb *TableBucket) foreachRows(txid int64, tableName string, h Handler) {
 	table.foreachRows(txid, h)
 }
 
+func (tbb *TableBucket) remove(txid int64, tableName, rowName string) {
+	if tbb == nil {
+		return
+	}
+
+	tbb.L.Lock()
+	defer tbb.L.Unlock()
+
+	table, ok := tbb.Tables[tableName]
+	if !ok {
+		return
+	}
+	table.remove(txid, rowName)
+}
+
 type Table struct {
 	Name string
 	Rows map[string]*Row
@@ -99,4 +114,15 @@ func (tb *Table) foreachRows(txid int64, h Handler) {
 			iterator.Previous()
 		}
 	}
+}
+
+func (tb *Table) remove(txid int64, rowName string) {
+	if tb == nil {
+		return
+	}
+	row, ok := tb.Rows[rowName]
+	if !ok {
+		return
+	}
+	row.remove(txid)
 }

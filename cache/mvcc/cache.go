@@ -1,5 +1,9 @@
 package mvcc
 
+var (
+	defaultBucketCount uint32 = 32
+)
+
 type Handler func(v interface{})
 
 type MVCCCache struct {
@@ -8,14 +12,57 @@ type MVCCCache struct {
 	TableBuckets []*TableBucket
 }
 
-func (mc *MVCCCache) PutValue(txid int64, tableName string, rowName string, value interface{}) {
+func newMVCCCache(name string) *MVCCCache {
+	cache := &MVCCCache{
+		Name:         name,
+		BucketNum:    defaultBucketCount,
+		TableBuckets: make([]*TableBucket, 0, defaultBucketCount),
+	}
+	for i := 0; i < int(defaultBucketCount); i++ {
+		cache.TableBuckets = append(cache.TableBuckets, &TableBucket{Tables: make(map[string]*Table)})
+	}
+
+	return cache
+}
+
+func (mc *MVCCCache) PutValueOnce(tableName string, rowName string, value interface{}) {
+	txid := GetTxID()
+	defer func() {
+		PutTxID(txid)
+	}()
+	mc.PutValueWithTxID(txid, tableName, rowName, value)
+}
+
+func (mc *MVCCCache) PutValueWithTxID(txid int64, tableName string, rowName string, value interface{}) {
 	tableBucket := mc.getTableBucket(tableName)
 	tableBucket.putValue(txid, tableName, rowName, value)
+}
+
+func (mc *MVCCCache) ForeachRowsOnce(tableName string, h Handler) {
+	txid := GetTxID()
+	defer func() {
+		PutTxID(txid)
+	}()
+	mc.ForeachRows(txid, tableName, h)
 }
 
 func (mc *MVCCCache) ForeachRows(txid int64, tableName string, h Handler) {
 	tableBucket := mc.getTableBucket(tableName)
 	tableBucket.foreachRows(txid, tableName, h)
+}
+
+func (mc *MVCCCache) RemoveRowOnce(tableName, rowName string) {
+	txid := GetTxID()
+	defer func() {
+		PutTxID(txid)
+	}()
+
+	mc.RemoveRow(txid, tableName, rowName)
+}
+
+func (mc *MVCCCache) RemoveRow(txid int64, tableName string, rowName string) {
+	tableBucket := mc.getTableBucket(tableName)
+	tableBucket.remove(txid, tableName, rowName)
 }
 
 func (mc *MVCCCache) getTableBucket(tableName string) *TableBucket {
