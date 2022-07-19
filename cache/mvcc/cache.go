@@ -6,6 +6,19 @@ var (
 
 type Handler func(v interface{})
 
+type IMVCCCache interface {
+	PutValueOnce(tableName string, rowName string, value interface{})
+	PutValueWithTxID(txid int64, tableName string, rowName string, value interface{})
+	ForeachRowsOnce(tableName string, h Handler)
+	ForeachRows(txid int64, tableName string, h Handler)
+	RemoveRowOnce(tableName, rowName string)
+	RemoveRow(txid int64, tableName string, rowName string)
+}
+
+func New(name string) IMVCCCache {
+	return newMVCCCache(name)
+}
+
 type MVCCCache struct {
 	Name         string
 	BucketNum    uint32
