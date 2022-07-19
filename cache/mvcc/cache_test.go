@@ -1,6 +1,9 @@
 package mvcc
 
-import "testing"
+import (
+	"fmt"
+	"testing"
+)
 
 func TestCache(t *testing.T) {
 	cache := newMVCCCache("demo")
@@ -124,6 +127,112 @@ func TestCache(t *testing.T) {
 	})
 	if count != 5 || time != 1 {
 		t.Errorf("count should be %d, but got %d", 5, count)
+		t.Errorf("should found %d row, but got %d", 1, time)
+	}
+	PutTxID(txid)
+
+	// ===============================================
+	// isolation (txid1, txid2)
+	// ===============================================
+	cache.PutValueOnce(tableName1, rowName1, 1)
+	cache.PutValueOnce(tableName1, rowName2, 2)
+
+	txid1 := GetTxID()
+	txid2 := GetTxID()
+	fmt.Println(getTxInfo(txid1))
+	fmt.Println(getTxInfo(txid2))
+
+	// txid1
+	count = 0
+	time = 0
+	cache.ForeachRows(txid1, tableName1, func(v interface{}) {
+		data := v.(int)
+		count += data
+		time++
+	})
+	if count != 3 || time != 2 {
+		t.Errorf("count should be %d, but got %d", 3, count)
+		t.Errorf("should found %d row, but got %d", 2, time)
+	}
+
+	cache.PutValueWithTxID(txid1, tableName1, rowName1, 3)
+
+	count = 0
+	time = 0
+	cache.ForeachRows(txid2, tableName1, func(v interface{}) {
+		data := v.(int)
+		count += data
+		time++
+	})
+	if count != 3 || time != 2 {
+		t.Errorf("count should be %d, but got %d", 3, count)
+		t.Errorf("should found %d row, but got %d", 2, time)
+	}
+
+	count = 0
+	time = 0
+	cache.ForeachRows(txid1, tableName1, func(v interface{}) {
+		data := v.(int)
+		count += data
+		time++
+	})
+	if count != 5 || time != 2 {
+		t.Errorf("count should be %d, but got %d", 5, count)
+		t.Errorf("should found %d row, but got %d", 2, time)
+	}
+
+	// txid2
+	cache.RemoveRow(txid2, tableName1, rowName2)
+	count = 0
+	time = 0
+	cache.ForeachRows(txid2, tableName1, func(v interface{}) {
+		data := v.(int)
+		count += data
+		time++
+	})
+	if count != 1 || time != 1 {
+		t.Errorf("count should be %d, but got %d", 1, count)
+		t.Errorf("should found %d row, but got %d", 1, time)
+	}
+
+	// new txid
+	count = 0
+	time = 0
+	cache.ForeachRowsOnce(tableName1, func(v interface{}) {
+		data := v.(int)
+		count += data
+		time++
+	})
+	if count != 3 || time != 2 {
+		t.Errorf("count should be %d, but got %d", 3, count)
+		t.Errorf("should found %d row, but got %d", 2, time)
+	}
+
+	// commit txid1
+	PutTxID(txid1)
+	count = 0
+	time = 0
+	cache.ForeachRowsOnce(tableName1, func(v interface{}) {
+		data := v.(int)
+		count += data
+		time++
+	})
+	if count != 5 || time != 2 {
+		t.Errorf("count should be %d, but got %d", 5, count)
+		t.Errorf("should found %d row, but got %d", 2, time)
+	}
+
+	// commit txid2
+	PutTxID(txid2)
+	count = 0
+	time = 0
+	cache.ForeachRowsOnce(tableName1, func(v interface{}) {
+		data := v.(int)
+		count += data
+		time++
+	})
+	if count != 3 || time != 1 {
+		t.Errorf("count should be %d, but got %d", 3, count)
 		t.Errorf("should found %d row, but got %d", 1, time)
 	}
 }

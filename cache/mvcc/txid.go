@@ -34,12 +34,17 @@ func PutTxID(txid int64) {
 }
 
 func currentTxIDCanReadTxID(currentTxID, txID int64) bool {
+	if currentTxID == txID {
+		return true
+	}
+
 	txidInfo, ok := getTxInfo(currentTxID)
 	if !ok {
 		return false
 	}
+
 	for _, snapshotTxID := range txidInfo.SnapShot {
-		if snapshotTxID == currentTxID {
+		if snapshotTxID == txID {
 			return false
 		}
 	}
