@@ -1,6 +1,8 @@
 package lru
 
-import "fmt"
+import (
+	"fmt"
+)
 
 type LRUCache struct {
 	Filter map[int]struct{}
